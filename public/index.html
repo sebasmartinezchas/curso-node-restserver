@@ -1,62 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Google Sign-in</title>
-  </head>
-  <body>
-    <h1>Google Sign-in</h1>
-    <hr />
-    <div
-      id="g_id_onload"
-      data-client_id="409974849132-42v465mkga8m3bm4d9jlqaanfn4eq6nm.apps.googleusercontent.com"
-      data-auto_prompt="false"
-      data-callback="handleCredentialResponse"
-    >
-   
-    </div>
-    <div
-      class="g_id_signin"
-      data-type="standard"
-      data-size="large"
-      data-theme="outline"
-      data-text="sign_in_with"
-      data-shape="rectangular"
-      data-logo_alignment="left"
-    ></div>
-    <button id="google_signout">Signout</button>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script>
-      function handleCredentialResponse(response) {
-        const body={id_token:response.credential}
-        //Google token:ID token
-       // console.log('id_token',response.credential);
-       fetch('https://restserver-node-sebas.herokuapp.com/api/auth/google',{
-        method:'POST',
-        headers:{
-          'Content-type':'application/json'
-        },
-        body:JSON.stringify(body)
-       })
-       .then(resp=>resp.json())
-       .then(resp=>{
-        console.log(resp)
-        localStorage.setItem('email',resp.usuario.correo)
-       })
-       .catch(console.warn);
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Signin</title>
 
-      }
-      const button=document.getElementById('google_signout');
-      button.onclick=()=>{
-        console.log(google.accounts.id)
-        google.accounts.id.disableAutoSelect()
-        google.accounts.id.revoke(localStorage.getItem('email'),done=>{
-          localStorage.clear();
-          location.reload();
-        })
-      }
+    <meta name="google-signin-client_id" content="1023916028923-mnn067lcjn3itrr0lo8oj1s07kddgrcj.apps.googleusercontent.com">
+
+</head>
+<body>
+
+    <h1>Google Signin</h1>
+    <hr>
+
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+
+
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+    <a href="#" onclick="signOut();">Sign out</a>
+
+    <script>
+
+        console.log(window.location.hostname.includes('localhost'))
+
+        var url = ( window.location.hostname.includes('localhost') )
+                    ? 'http://localhost:8080/api/auth/google'
+                    : 'https://restserver-node-sebas.herokuapp.com/api/auth/google';
+
+
+        function onSignIn(googleUser) {
+
+            var profile = googleUser.getBasicProfile();
+            console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+            console.log('Name: ' + profile.getName());
+            console.log('Image URL: ' + profile.getImageUrl());
+            console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+
+            var id_token = googleUser.getAuthResponse().id_token;
+            const data = { id_token };
+
+            fetch( url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify( data )
+            })
+            .then( resp => resp.json() )
+            .then( data => console.log( 'Nuestro server', data ) )
+            .catch( console.log );
+            
+        }
+
+        function signOut() {
+            var auth2 = gapi.auth2.getAuthInstance();
+            auth2.signOut().then(function () {
+            console.log('User signed out.');
+            });
+        }
     </script>
-  </body>
+
+</body>
 </html>
